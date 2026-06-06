@@ -141,7 +141,7 @@ async function cargarDatos(){
     const respuesta = await fetch(CSV_URL);
     const texto = await respuesta.text();
 
-    const filas = texto.trim().split("\\n");
+    const filas = texto.trim().split("\n");
 
     for(let i = 1; i < filas.length; i++){
 
