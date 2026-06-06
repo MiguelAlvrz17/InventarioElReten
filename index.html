@@ -39,12 +39,6 @@ h2{
     font-weight:bold;
 }
 
-#categoria{
-    margin-top:10px;
-    font-size:24px;
-    color:#666;
-}
-
 #precio{
     margin-top:20px;
     font-size:100px;
@@ -117,7 +111,6 @@ tr:hover{
 </div>
 
 <div id="producto"></div>
-<div id="categoria"></div>
 <div id="precio"></div>
 
 <div id="resultados"></div>
@@ -150,15 +143,13 @@ async function cargarDatos(){
         const codigo = columnas[0]?.trim();
         const producto = columnas[1]?.trim();
         const precio = columnas[2]?.trim();
-        const categoria = columnas[3]?.trim();
 
         if(!codigo) continue;
 
         const item = {
             codigo,
             producto,
-            precio,
-            categoria
+            precio
         };
 
         inventario[codigo] = item;
@@ -181,9 +172,6 @@ function mostrarProducto(codigo){
     document.getElementById("producto").textContent =
         producto.producto;
 
-    document.getElementById("categoria").textContent =
-        producto.categoria;
-
     document.getElementById("precio").textContent =
         producto.precio;
 }
@@ -205,9 +193,6 @@ inputCodigo.addEventListener("change", ()=>{
 
         document.getElementById("producto")
             .textContent = "PRODUCTO NO REGISTRADO";
-
-        document.getElementById("categoria")
-            .textContent = "";
 
         document.getElementById("precio")
             .textContent = codigo;
