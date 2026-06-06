@@ -14,21 +14,35 @@ body{
 }
 
 h1{
-    font-size:50px;
+    font-size:60px;
+    margin-bottom:0;
 }
 
-#codigo{
+h2{
+    margin-top:10px;
+    color:#666;
+    font-weight:normal;
+}
+
+#codigo,
+#buscarNombre{
     width:500px;
     max-width:90%;
-    font-size:32px;
+    font-size:28px;
     padding:15px;
     text-align:center;
 }
 
 #producto{
-    margin-top:50px;
+    margin-top:40px;
     font-size:48px;
     font-weight:bold;
+}
+
+#categoria{
+    margin-top:10px;
+    font-size:24px;
+    color:#666;
 }
 
 #precio{
@@ -41,85 +55,217 @@ h1{
 .error{
     color:red;
 }
+
+#resultados{
+    margin-top:40px;
+}
+
+table{
+    width:100%;
+    max-width:1000px;
+    margin:auto;
+    border-collapse:collapse;
+    background:white;
+}
+
+th, td{
+    border:1px solid #ddd;
+    padding:12px;
+}
+
+th{
+    background:#f0f0f0;
+}
+
+tr:hover{
+    background:#fafafa;
+    cursor:pointer;
+}
 </style>
 </head>
+
 <body>
 
-<h1>ESCANEA UN PRODUCTO</h1>
+<h1>EL RETÉN</h1>
+<h2>Consulta de precios</h2>
 
-<input
-    id="codigo"
-    type="text"
-    autofocus
-    placeholder="Escanea aquí"
-/>
+<br>
+
+<div>
+    <strong>Escanear código</strong>
+    <br><br>
+
+    <input
+        id="codigo"
+        type="text"
+        autofocus
+        placeholder="Escanea aquí"
+    />
+</div>
+
+<br><br>
+
+<div>
+    <strong>Buscar producto</strong>
+    <br><br>
+
+    <input
+        id="buscarNombre"
+        type="text"
+        placeholder="Ej. Fanta"
+    />
+</div>
 
 <div id="producto"></div>
+<div id="categoria"></div>
 <div id="precio"></div>
+
+<div id="resultados"></div>
 
 <script>
 
-const CSV_URL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vTlYlGGf3oqk2WOcEpsJOPJlJZgM1-L01wyxY9thivXBgeqVzQsLcJp7thmwZMruCjo5E5HyYOdMv4m/pub?output=csv";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlYlGGf3oqk2WOcEpsJOPJlJZgM1-L01wyxY9thivXBgeqVzQsLcJp7thmwZMruCjo5E5HyYOdMv4m/pub?output=csv";
 
 let inventario = {};
+let productos = [];
 
-async function cargarDatos() {
+function normalizar(texto){
+    return texto
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+}
+
+async function cargarDatos(){
 
     const respuesta = await fetch(CSV_URL);
     const texto = await respuesta.text();
 
-    const filas = texto.trim().split("\n");
+    const filas = texto.trim().split("\\n");
 
-    for(let i=1;i<filas.length;i++){
+    for(let i = 1; i < filas.length; i++){
 
         const columnas = filas[i].split(",");
 
         const codigo = columnas[0]?.trim();
         const producto = columnas[1]?.trim();
         const precio = columnas[2]?.trim();
+        const categoria = columnas[3]?.trim();
 
-        inventario[codigo] = {
+        if(!codigo) continue;
+
+        const item = {
+            codigo,
             producto,
-            precio
+            precio,
+            categoria
         };
+
+        inventario[codigo] = item;
+        productos.push(item);
     }
 
-    console.log("Productos cargados:", Object.keys(inventario).length);
+    console.log("Productos cargados:", productos.length);
 }
 
 cargarDatos();
 
-const input = document.getElementById("codigo");
+function mostrarProducto(codigo){
 
-input.addEventListener("change", ()=>{
+    const producto = inventario[codigo];
 
-    const codigo = input.value.trim();
+    if(!producto) return;
 
-    const productoDiv = document.getElementById("producto");
-    const precioDiv = document.getElementById("precio");
+    document.getElementById("producto").classList.remove("error");
+
+    document.getElementById("producto").textContent =
+        producto.producto;
+
+    document.getElementById("categoria").textContent =
+        producto.categoria;
+
+    document.getElementById("precio").textContent =
+        producto.precio;
+}
+
+const inputCodigo = document.getElementById("codigo");
+
+inputCodigo.addEventListener("change", ()=>{
+
+    const codigo = inputCodigo.value.trim();
 
     if(inventario[codigo]){
 
-        productoDiv.classList.remove("error");
-
-        productoDiv.textContent =
-            inventario[codigo].producto;
-
-        precioDiv.textContent =
-            "$" + inventario[codigo].precio;
+        mostrarProducto(codigo);
 
     }else{
 
-        productoDiv.classList.add("error");
+        document.getElementById("producto")
+            .classList.add("error");
 
-        productoDiv.textContent =
-            "PRODUCTO NO REGISTRADO";
+        document.getElementById("producto")
+            .textContent = "PRODUCTO NO REGISTRADO";
 
-        precioDiv.textContent = codigo;
+        document.getElementById("categoria")
+            .textContent = "";
+
+        document.getElementById("precio")
+            .textContent = codigo;
     }
 
-    input.value = "";
+    inputCodigo.value = "";
+    inputCodigo.focus();
+});
+
+const buscador =
+    document.getElementById("buscarNombre");
+
+buscador.addEventListener("input", ()=>{
+
+    const textoBusqueda =
+        normalizar(buscador.value.trim());
+
+    const resultados =
+        document.getElementById("resultados");
+
+    if(textoBusqueda.length < 2){
+
+        resultados.innerHTML = "";
+        return;
+    }
+
+    const encontrados = productos.filter(p =>
+        normalizar(p.producto)
+            .includes(textoBusqueda)
+    );
+
+    if(encontrados.length === 0){
+
+        resultados.innerHTML =
+            "<p>No se encontraron productos.</p>";
+
+        return;
+    }
+
+    resultados.innerHTML = `
+        <h3>${encontrados.length} productos encontrados</h3>
+
+        <table>
+            <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+            </tr>
+
+            ${encontrados.map(p => `
+                <tr onclick="mostrarProducto('${p.codigo}')">
+                    <td>${p.producto}</td>
+                    <td>${p.categoria}</td>
+                    <td>${p.precio}</td>
+                </tr>
+            `).join("")}
+        </table>
+    `;
 });
 
 </script>
