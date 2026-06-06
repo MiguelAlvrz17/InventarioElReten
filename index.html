@@ -238,14 +238,12 @@ buscador.addEventListener("input", ()=>{
         <table>
             <tr>
                 <th>Producto</th>
-                <th>Categoría</th>
                 <th>Precio</th>
             </tr>
 
             ${encontrados.map(p => `
                 <tr onclick="mostrarProducto('${p.codigo}')">
                     <td>${p.producto}</td>
-                    <td>${p.categoria}</td>
                     <td>${p.precio}</td>
                 </tr>
             `).join("")}
