@@ -149,7 +149,11 @@ async function cargarDatos(){
 
         const codigo = columnas[0]?.trim();
         const producto = columnas[1]?.trim();
-        const columnas = filas[i].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+       let precio = columnas[2]?.trim();
+// unir partes si el precio venía separado por coma
+        if (columnas.length > 4) {
+            precio = columnas.slice(2, columnas.length - 1).join(",");
+        }
         const categoria = columnas[3]?.trim();
 
         if(!codigo) continue;
